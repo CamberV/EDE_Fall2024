@@ -172,7 +172,7 @@ fixed_date_obj_past
 str_past <- "55-feb-3"
 
 #Alternative 1
-date_obj_past <- fast_strptime(str_past,"%y-%b-%d",cutoff_2000=24L)
+date_obj_past <- fast_strptime(str_past,"%y-%b-%d",cutoff_2000=24L) #L used to indicate long integer vs. number stored as floating point (with decimal)
 date_obj_past
 
 #Alternative 2
