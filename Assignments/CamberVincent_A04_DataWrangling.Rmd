@@ -192,12 +192,15 @@ o3_pm25_1819_summary<-o3_pm25_1819_tidy%>%
   group_by(Site.Name,Month,Year)%>% #group by site, month, and year per instructions
   
   summarize(
-    PM2.5=mean(PM2.5,na.rm=TRUE),
-    Ozone=mean(Ozone,na.rm=TRUE), #remove n/a values from mean calculation
-    .groups="drop"#prevents "groups" message from displaying in final Rmd knit
-                  #ungrouping is not needed for further analysis, just for visualization
+    PM2.5=mean(PM2.5),
+    Ozone=mean(Ozone),
+    .groups="drop" #prevents "groups" message from displaying in final Rmd knit
+                   #ungrouping is not needed for further analysis, just for visual clarity
   )%>%
   
+  #initially included na.rm=TRUE for summarize function, yielded 239x5 table
+  #Prof. Fay showed first five rows, removed na.rm=TRUE to match output, yielding 182x5 table
+
   drop_na(Ozone) #removing instances where Ozone values are unavailable
 
 #13
@@ -208,5 +211,5 @@ dim(o3_pm25_1819_summary) #call dimensions
 
 14. Why did we use the function `drop_na` rather than `na.omit`? Hint: replace `drop_na` with `na.omit` in part 12 and observe what happens with the dimensions of the summary date frame.
 
-> Answer: When drop_na was used, the final data frame had the dimensions of 239 x 5. The na.omit function led to a final summary data frame with dimensions of 223 x 5. 16 rows of data were additionally omited when the na.omit function was used. Drop_na only removes the rows of the dataframe where Ozone values are not available, whereas na.omit removed the rows where any column (including PM2.5) had an n/a or NaN value.
+> Answer: When drop_na was used, the final data frame had the dimensions of 182 x 5. The na.omit function led to a final summary data frame with dimensions of 101 x 5. 81 rows of data were additionally omited when the na.omit function was used. Drop_na only removes the rows of the dataframe where Ozone values are not available, whereas na.omit removed the rows where any column (including PM2.5) had an NA value.
 
