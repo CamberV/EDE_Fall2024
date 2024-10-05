@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Camber Vincent"
 date: "Fall 2024"
 output: pdf_document
 geometry: margin=2.54cm
@@ -32,10 +32,28 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 
 ```{r initialize project}
 #1 
+#Loading in all packages
+library(tidyverse)
+library(lubridate)
+library(here)
+library(cowplot)
+
+getwd() #verify home directory
+
+#Read in csv files
+lake_chem_nutrients<-read.csv("/Users/cambervincent/EDA_Fall_2024/Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
+litter<-read.csv("/Users/cambervincent/EDA_Fall_2024/Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv")
 
 #2 
+#Checking class of dates in data samples
+class(lake_chem_nutrients$sampledate) 
+class(litter$collectDate)
 
+#Changing format to date
+lake_chem_nutrients$sampledate<-as.Date(lake_chem_nutrients$sampledate)
+litter$collectDate<-as.Date(litter$collectDate)
 ```
+
 ## Define your theme
 3. Build a theme and set it as your default theme. Customize the look of at least two of the following: 
  * Plot background
@@ -46,7 +64,8 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 
 ```{r build plot theme}
 #3
-
+#theme_standard<-
+  
 ```
 
 ## Create graphs
@@ -56,7 +75,12 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r plot total P vs PO4}
 #4 
-
+ggplot(lake_chem_nutrients,aes(x=po4,y=tp_ug,color=lakename))+
+  geom_point()+
+  geom_smooth(method="lm")+
+  xlim(0,38)+
+  ylim(0,125)+
+  theme_cowplot()
 ```
 
 
