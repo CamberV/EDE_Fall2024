@@ -125,7 +125,9 @@ Tips:
 ```{r Create boxplots,warning=FALSE,message=FALSE,fig.height=6.5}
 #5 
 #creating plot for temperature
-p1<-ggplot(lake_chem_nutrients,aes(x=factor(month),y=temperature_C,fill=lakename))+
+p1<-ggplot(lake_chem_nutrients,aes(x=factor(month,levels=1:12,labels=month.abb),
+                                   y=temperature_C,
+                                   fill=lakename))+
   geom_boxplot(outlier.size=0.5)+ #reduce outlier size for visual clarity
   labs(y="Temperature (°C)",fill="Lake")+
   theme(panel.grid.major=element_blank(), #removing gridlines for clarity on boxplot
@@ -133,7 +135,9 @@ p1<-ggplot(lake_chem_nutrients,aes(x=factor(month),y=temperature_C,fill=lakename
         axis.title.x=element_blank(),legend.position="top") #removes x-axis titles and legend
 
 #creating plot for total phosphorus
-p2<-ggplot(lake_chem_nutrients,aes(x=factor(month),y=tp_ug,fill=lakename))+
+p2<-ggplot(lake_chem_nutrients,aes(x=factor(month,levels=1:12,labels=month.abb),
+                                   y=tp_ug,
+                                   fill=lakename))+
   geom_boxplot(outlier.size=0.5)+ #reduce outlier size for visual clarity
   labs(y="Total Phosphorus",fill="Lake")+
   theme(panel.grid.major=element_blank(), #removing gridlines for clarity on boxplot
@@ -141,7 +145,9 @@ p2<-ggplot(lake_chem_nutrients,aes(x=factor(month),y=tp_ug,fill=lakename))+
         axis.title.x=element_blank(),legend.position="none") #removes x-axis titles and legend
 
 #creating plot for total nitrogen
-p3<-ggplot(lake_chem_nutrients,aes(x=factor(month),y=tn_ug,fill=lakename))+
+p3<-ggplot(lake_chem_nutrients,aes(x=factor(month,levels=1:12,labels=month.abb),
+                                   y=tn_ug,
+                                   fill=lakename))+
   geom_boxplot(outlier.size=0.5)+ #reduce outlier size for visual clarity
   labs(x="Month",y="Total Nitrogen",fill="Lake")+
   theme(panel.grid.major=element_blank(), #removing gridlines for clarity on boxplot
