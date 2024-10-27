@@ -19,7 +19,6 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 4. Be sure to **answer the questions** in this assignment document.
 5. When you have completed the assignment, **Knit** the text and code into a single PDF file.
 
-
 ## Set up your session 
 1. Set up your session. Check your working directory. Load the tidyverse, agricolae and other needed packages. Import the *raw* NTL-LTER raw data file for chemistry/physics (`NTL-LTER_Lake_ChemistryPhysics_Raw.csv`). Set date columns to date objects.
 
@@ -27,12 +26,39 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 
 ```{r setup2}
 #1
+getwd() #getting working directory
+
+#installing needed packages
 library(tidyverse)
 library(agricolae)
+library(lubridate)
+library(here)
+
+lake_chemphys<-read_csv("Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv",
+                        show_col_types=F) #quiet warning message
+lake_chemphys$sampledate<-mdy(lake_chemphys$sampledate) #convert date column
 
 #2
+theme_standard<-theme(
+  
+  text=element_text(family="Times",size=12,color="black"), #setting base font to Times New Roman
+  plot.title=element_text(family="Helvetica",face="bold",size=16,  #title text theme
+                          margin=margin(b=3)), #added margin for visual clarity
+  plot.subtitle=element_text(family="Helvetica",face="italic",size=12, #subtitle text theme
+                             color="gray20",
+                             margin=margin(b=10)), #added margin for visual clarity
+  
+  plot.background=element_rect(fill="white"), #background set to white
+  panel.background=element_rect(fill="white"), #graph background set to white
+  panel.border=element_rect(color="black",fill=NA), #set a border around the graph
 
+  panel.grid.major=element_line(color="gray85"), #recolor gridlines
+  panel.grid.minor=element_line(color="gray95"),
+  axis.ticks=element_blank() #turn off ticks
+  
+)
 
+theme_set(theme_standard) #set custom theme as the base theme for all graphs
 ```
 
 ## Simple regression
@@ -40,9 +66,8 @@ Our first research question is: Does mean lake temperature recorded during July 
 
 3. State the null and alternative hypotheses for this question:
 > Answer:
-H0: 
-Ha: 
-
+H0: There is no significant change in mean lake temperature recorded during July across all lakes.
+Ha: There is a signifianct change in mean lake temperature recorded during July across all lakes.
 
 4.  Wrangle your NTL-LTER dataset with a pipe function so that the records meet the following criteria: 
  * Only dates in July. 
@@ -51,34 +76,45 @@ Ha:
 
 5. Visualize the relationship among the two continuous variables with a scatter plot of temperature by depth. Add a smoothed line showing the linear model, and limit temperature values from 0 to 35 °C. Make this plot look pretty and easy to read.
 
-```{r scatterplot}
+```{r scatterplot,warning=FALSE}
 #4
-
+lake_chemphys_july<-lake_chemphys%>% #initiate pipe
+  filter(format(sampledate,"%m")=="07")%>% #filtering using the sampledate column for July
+  select(lakename,year4,daynum,depth,temperature_C)%>% #selecting columns
+  drop_na() #removes the NA values
 
 #5
-
+ggplot(lake_chemphys_july,aes(x=depth,y=temperature_C))+
+  geom_jitter(alpha=0.2)+ #jitter used and points made partially transparent for visual clarity
+  geom_smooth(method="lm",color="red")+ #line color changed for clarity
+  scale_x_continuous(limits=c(0,NA),expand=c(0,0))+ #calling expand to justify 0,0 coordinate
+  scale_y_continuous(limits=c(0,35),expand=c(0,0))+ #setting y-limits
+  labs(title="Temperature by Depth",
+       subtitle="For All Lakes in July",
+       x="Depth (m)",
+       y="Temperature (Cº)") #adding labels
 
 ```
 
-
 6. Interpret the figure. What does it suggest with regards to the response of temperature to depth? Do the distribution of points suggest about anything about the linearity of this trend?
 
-> Answer: 
+> Answer: The figure suggests that as depth increaes, temperature will decrease. The distribution of points does not appear to be truly linear. The bulk of the data follows an reverse-S curve and appears to hit an asymptote around 5ºC.
 
 
 7. Perform a linear regression to test the relationship and display the results.
 
 ```{r linear.regression}
 #7
+tempdepth.regression<-lm( #setting linear regression
+  data=lake_chemphys_july,
+  temperature_C~depth)
 
-
+summary(tempdepth.regression) #displaying results
 ```
-
 
 8. Interpret your model results in words. Include how much of the variability in temperature is explained by changes in depth, the degrees of freedom on which this finding is based, and the statistical significance of the result. Also mention how much temperature is predicted to change for every 1m change in depth. 
 
-> Answer:
-
+> Answer: The intercept of the model is at 21.96ºC, suggesting that at a depth of 0 meters the average temperature is predicted to be 21.96ºC. The coefficient for depth is -1.95 which suggests that for every 1-meter increase in depth, temperature will decrease by approximately 1.95ºC. Both of these values (the intercept and slope) have a p-value less than 2e-16 and are therefore highlighy statistically signifanct at the p<0.001 level. The model has an R-squared value of 0.7387 which suggests that 73.87% of the variance in temperature can be explained by variance in depth. The model rests on 9726 degrees of freedom with a residual standard error of 3.835, meaning that the observed temperature deviates from the model's prediction by an average of 3.835ºC.
 
 ---
 
