@@ -34,6 +34,8 @@ library(agricolae)
 library(lubridate)
 library(here)
 
+setwd("~/EDA_Fall_2024") #adjusting working directory
+
 lake_chemphys<-read_csv("Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv",
                         show_col_types=F) #quiet warning message
 lake_chemphys$sampledate<-mdy(lake_chemphys$sampledate) #convert date column
@@ -65,6 +67,7 @@ theme_set(theme_standard) #set custom theme as the base theme for all graphs
 Our first research question is: Does mean lake temperature recorded during July change with depth across all lakes?
 
 3. State the null and alternative hypotheses for this question:
+
 > Answer:
 H0: There is no significant change in mean lake temperature recorded during July across all lakes.
 Ha: There is a signifianct change in mean lake temperature recorded during July across all lakes.
@@ -76,7 +79,7 @@ Ha: There is a signifianct change in mean lake temperature recorded during July 
 
 5. Visualize the relationship among the two continuous variables with a scatter plot of temperature by depth. Add a smoothed line showing the linear model, and limit temperature values from 0 to 35 °C. Make this plot look pretty and easy to read.
 
-```{r scatterplot,warning=FALSE}
+```{r scatterplot,message=FALSE,warning=FALSE}
 #4
 lake_chemphys_july<-lake_chemphys%>% #initiate pipe
   filter(format(sampledate,"%m")=="07")%>% #filtering using the sampledate column for July
@@ -105,11 +108,9 @@ ggplot(lake_chemphys_july,aes(x=depth,y=temperature_C))+
 
 ```{r linear.regression}
 #7
-tempdepth.regression<-lm( #setting linear regression
-  data=lake_chemphys_july,
-  temperature_C~depth)
+tempdepth_regression<-lm(data=lake_chemphys_july,temperature_C~depth) #setting linear regression
 
-summary(tempdepth.regression) #displaying results
+summary(tempdepth_regression) #displaying results
 ```
 
 8. Interpret your model results in words. Include how much of the variability in temperature is explained by changes in depth, the degrees of freedom on which this finding is based, and the statistical significance of the result. Also mention how much temperature is predicted to change for every 1m change in depth. 
@@ -128,19 +129,18 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 
 ```{r temperature.model}
 #9
-
-
+temp_aic<-lm(data=lake_chemphys_july,temperature_C~year4+daynum+depth) #setting aic
+summary(temp_aic) #displaying results for analysis
+step(temp_aic) #running step function for analysis
 
 #10
-
-
+temp_multiregression<-lm(data=lake_chemphys_july,temperature_C~daynum+depth) #new regression model
+summary(temp_multiregression) #displaying results for analysis
 ```
 
 11. What is the final set of explanatory variables that the AIC method suggests we use to predict temperature in our multiple regression? How much of the observed variance does this model explain? Is this an improvement over the model using only depth as the explanatory variable?
 
-> Answer: 
-
-
+> Answer: The AIC suggests the final set of predictor variables in the multiple regression should be daynum and depth. year4 had the lowest significance of the three tested variables, falling under only the 0.01 level as opposed tothe 0.001 level of significance. Removing the year4 variable increased the AIC only slightly from 26066 to 26070, indicating that it has a minimal effect on model fit, while removing daynum or depth results in much larger increases in AIC value. year4 also had the smallest coefficient by absolute value, indicating it had the weakest relationship of the three variables tested. The final multiple regression model explains 74.1% of the observed variance in temperature data. This is a slight improvement over the linear regression model that only explained 73.87% of the variance in temperature.
 
 ---
 ## Analysis of Variance
@@ -149,48 +149,57 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 
 ```{r anova.model}
 #12
+lake_anova<-aov(data=lake_chemphys_july,temperature_C~lakename) #run ANOVA
+summary(lake_anova) #displaying results for analysis
 
-
+lake_regression<-lm(data=lake_chemphys_july,temperature_C~lakename) #run linear model
+summary(lake_regression) #displaying results for analysis
 ```
 
 13. Is there a significant difference in mean temperature among the lakes? Report your findings. 
 
-> Answer: 
-
-
+> Answer: The anova resulted in a small p-value (<2e-16) that fell into the significance category of less than 0.001, indicating a significant difference in mean temperature among the lakes. The F-value of 50 and 8 and 9719 degrees of freedom also suggests that there is a significant difference -- that differences are not due to random chance. The linear model generated coefficient estimates for each lake relative to the reference lake, all of which were found to have a significance factors less than 0.001, with the exception of Crampton Lake which was just shy of reaching the 0.001 level of significance. These various coefficient values wiht highly significant results suggest that there is a significant difference in mean temperature among the lakes.
 
 14. Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
 
-```{r scatterplot.2}
+```{r scatterplot.2,message=FALSE,warning=FALSE}
 #14.
-
-
+ggplot(lake_chemphys_july,aes(x=depth,y=temperature_C,color=lakename))+
+  geom_jitter(alpha=0.5)+ #jitter used and points made partially transparent for visual clarity
+  geom_smooth(method="lm",se=F)+
+  scale_x_continuous(limits=c(0,NA),expand=c(0,0))+ #calling expand to justify 0,0 coordinate
+  scale_y_continuous(limits=c(0,35),expand=c(0,0))+ #setting y-limits
+  labs(title="Temperature by Depth in July",
+       subtitle="By Individual Lake",
+       x="Depth (m)",
+       y="Temperature (Cº)",
+       color="Lake") #adding labels
 ```
 
 15. Use the Tukey's HSD test to determine which lakes have different means.
 
 ```{r tukey.test}
 #15
-
-
+lake_tukey<-TukeyHSD(lake_anova) #running Tukey test
+print(lake_tukey) #displaying results for analysis
 ```
 
 16.From the findings above, which lakes have the same mean temperature, statistically speaking, as Peter Lake? Does any lake have a mean temperature that is statistically distinct from all the other lakes?
 
->Answer:
-
- 
+>Answer: To accept the null hypothesis (that there is no difference in mean temperature between lakes), the p-value must be greater than 0.05. There are two lakes where the Tukey test resulted in a p-value greater than 0.05 when compared to Peter Lake. The Paul Lake and Peter Lake (p-value = 0.2241586) and Ward Lake and Peter Lake (p = 0.7827037) both had high p-values, indicating a low statistical difference in the mean temperature - i.e. the same mean temperature statistically speaking. No lake is statistically distinct from all other lakes.
 
 17. If we were just looking at Peter Lake and Paul Lake. What's another test we might explore to see whether they have distinct mean temperatures? 
 
->Answer: 
-
-
+>Answer: Another test to explore would be the two-sample t-test to determine statistical difference in mean temperature. However, the t-test assumes that the data for each lake will be normally distributed, which might not be true.
 
 18. Wrangle the July data to include only records for Crampton Lake and Ward Lake. Run the two-sample T-test on these data to determine whether their July temperature are same or different. What does the test say? Are the mean temperatures for the lakes equal? Does that match you answer for part 16?
 
 ```{r t.test}
+crampton_ward_july<-lake_chemphys_july%>%
+  filter(lakename%in%c("Crampton Lake","Ward Lake")) #filter to two lakes of interest
 
+crampton_ward_t_test<-t.test(data=crampton_ward_july,temperature_C~lakename) #run t-test
+print(crampton_ward_t_test) #displaying results for analysis
 ```
 
->Answer: 
+>Answer: Since the p-value returned by the t-test (0.2649) is greater than 0.05, we fail to reject the null hypothesis and conclude that there is no difference in mean temperature between Crampton and Ward Lakes in July. The confidence interval of the true difference ranges from -0.6821129 to 2.4686451, a range that includes zero. This means that zero is a plausible value for the true difference in mean temperature, so we cannot confidently say there is a difference in mean temperature (difference in sample means could be due to random sampling variation rather than true difference) and statistically find that the mean temperature for the lakes are equal (accepting the null hypothesis that there is no difference in mean temperature). These results do match my answer in part 16. Part 16 identified Peter and Paul Lakes as a pair that do not have a statistically significant difference in mean temperature, which my t-test concurred with.
